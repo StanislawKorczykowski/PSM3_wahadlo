@@ -1,65 +1,68 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
 
 
-# Funkcja opisująca ruch wahadła
-def f(t, y, L, g):
+g = 9.81
+l = 1.0
+theta0 = np.pi / 4
+omega0 = 0.0
+
+
+t0 = 0.0
+t_end = 10.0
+dt = 0.01
+
+method = input()
+
+def wzor_wahadla(y):
     theta, omega = y
-    dydt = np.array([omega, -(g / L) * np.sin(theta)])
+    dydt = np.array([omega, -(g / l) * np.sin(theta)])
     return dydt
 
+def rk4_step(f, y, dt):
+    k1 = f(y)
+    k2 = f(y + 0.5 * dt * k1)
+    k3 = f(y + 0.5 * dt * k2)
+    k4 = f(y + dt * k3)
+    return y + (dt / 6) * (k1 + 2 * k2 + 2 * k3 + k4)
+t = t0
+y = [theta0, omega0]
+angle = [theta0]
+trajectory = []
 
-# Metoda RK4
-def RK4(f, t0, y0, tf, h, L, g):
-    n = int((tf - t0) / h) + 1
-    t = np.linspace(t0, tf, n)
-    y = np.zeros((n, len(y0)))
-    y[0] = y0
-    for i in range(n - 1):
-        k1 = h * f(t[i], y[i], L, g)
-        k2 = h * f(t[i] + h / 2, y[i] + k1 / 2, L, g)
-        k3 = h * f(t[i] + h / 2, y[i] + k2 / 2, L, g)
-        k4 = h * f(t[i] + h, y[i] + k3, L, g)
-        y[i + 1] = y[i] + (1 / 6) * (k1 + 2 * k2 + 2 * k3 + k4)
-    return t, y
-
-
-# Dane wejściowe
-L = 1.0  # Długość wahadła [m]
-g = 9.81  # Przyspieszenie ziemskie [m/s^2]
-theta0 = np.pi / 4  # Początkowy kąt [rad]
-omega0 = 0.0  # Początkowa prędkość kątowa [rad/s]
-t0 = 0.0  # Czas początkowy [s]
-tf = 10.0  # Czas końcowy [s]
-h = 0.01  # Krok czasowy [s]
-
-# Wywołanie metody RK4
-t, y = RK4(f, t0, [theta0, omega0], tf, h, L, g)
-
-# Animacja ruchu wahadła
-fig, ax = plt.subplots()
-line, = ax.plot([], [], 'o-', lw=2)
-ax.set_xlim(-1.1 * L, 1.1 * L)
-ax.set_ylim(-1.1 * L, 1.1 * L)
-ax.set_aspect('equal')
-ax.set_xlabel('x [m]')
-ax.set_ylabel('y [m]')
-ax.set_title('Animacja ruchu wahadła')
+def euler(f, y, dt):
+    return y + dt * f(y)
+def euler_improved(f, y, dt):
+    dydt = f(y)
+    omega_new = y[1] + dt * dydt[1]
+    theta_new = y[0] + dt * omega_new
+    return np.array([theta_new, omega_new])
 
 
-def init():
-    line.set_data([], [])
-    return line,
+print("wybierz metode: [euler, eulerimp, rk4]")
+while t <= t_end:
+    if method == "euler":
+        y = euler(wzor_wahadla, y, dt)
+    if method == "rk4":
+        y = rk4_step(wzor_wahadla, y, dt)
+    if method == "eulerimp":
+        y = euler_improved(wzor_wahadla, y, dt)
 
 
-def update(frame, y, L, line):
-    x = L * np.sin(y[frame, 0])
-    y_pos = -L * np.cos(y[frame, 0])
-    line.set_data([0, x], [0, y_pos])
-    return line,
 
+    t += dt
+    angle.append(y[0])
+    trajectory.append((l * np.sin(y[0]), -l * np.cos(y[0])))
 
-ani = FuncAnimation(fig, update, frames=len(t), fargs=(y, L, line), init_func=init, blit=True, interval=10)
+# Konwersja trajektorii na współrzędne kartezjańskie
+x = [x[0] for x in trajectory]
+y = [y[1] for y in trajectory]
 
+# Wizualizacja trajektorii wahadła
+plt.plot(x, y)
+plt.xlabel("X")
+plt.ylabel("Y")
+plt.title("Trajektoria wahadła RK4")
+plt.axis("equal")
+plt.grid()
 plt.show()
