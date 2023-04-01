@@ -1,16 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Parametry wahadła
-g = 9.81  # przyspieszenie ziemskie (m/s^2)
-l = 1.0  # długość wahadła (m)
-theta0 = np.pi / 4  # początkowy kąt wychylenia (rad)
-omega0 = 0.0  # początkowa prędkość kątowa (rad/s)
+g = 9.81
+l = 1.0
+theta0 = np.pi / 4
+omega0 = 0.0
 
-# Parametry symulacji
-t0 = 0.0  # czas startowy (s)
-t_end = 10.0  # czas końcowy (s)
-dt = 0.01  # krok czasowy (s)
+t0 = 0.0
+t_end = 10.0
+dt = 0.01
 method = input().strip()
 
 
@@ -21,8 +19,9 @@ def euler(theta, omega, dt):
 
 
 def euler_improved(theta, omega, dt):
-    omega_new = omega - (dt * g / l) * np.sin(theta)
-    theta_new = theta + dt * omega_new
+    omega_half = omega - (0.5 * dt * g / l) * np.sin(theta)
+    theta_new = theta + dt * omega_half
+    omega_new = omega - (dt * g / l) * np.sin(theta_new)
     return theta_new, omega_new
 
 
@@ -73,10 +72,9 @@ y = trajectory[:, 1]
 
 # Wizualizacja trajektorii wahadła
 plt.plot(x, y)
-plt.xlabel("X [m]")
-plt.ylabel("Y [m]")
-plt.title(f"Trajektoria wahadła (metoda {method.upper()})")
+plt.xlabel("X")
+plt.ylabel("Y")
+plt.title("Trajektoria wahadła")
 plt.axis("equal")
 plt.grid()
 plt.show()
-
